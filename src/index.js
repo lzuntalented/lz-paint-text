@@ -1,9 +1,17 @@
+// 绘制模式
 const Mode = {
     default: 0, // 默认所有文字一起画
     single: 1, // 单字符绘制
-    singleSplit: 2, // 拆分单字符
-    defaultSplit: 3
+    defaultSplit: 2
 }
+
+// 绘制动效
+const Animation = {
+    circle: 0, // 圆圈
+    paint: 1, // 画笔
+    arrow: 2, // 箭头
+}
+
 /**
  * 定时器
  */
@@ -105,17 +113,54 @@ class LzPaintText {
             return ;
         }
         
-        const fontSize = config.fontSize || this._default.fontSize;
-        const list = this.font.getPath(text, point.x, point.y, fontSize);
-        const mode = config.mode || this._default.mode;
-        
-        this.drawQueue.push({
-            cmd: list.commands,
+        const defaultConfig = {
             point,
             config,
             index: 0,
             stroke: config.stroke || this._default.stroke
+        };
+        const putObjArray = [];
+        const fontSize = config.fontSize || this._default.fontSize;
+        const mode = config.mode || this._default.mode;
+        if (mode === Mode.single) {
+            const list = this.font.getPaths(text, point.x, point.y, fontSize);
+            list.forEach(it => {
+                this.drawQueue.push(Object.assign({cmd: it.commands}, defaultConfig));
+            });
+        } else if (mode === Mode.default || mode === Mode.defaultSplit) {
+            const list = this.font.getPath(text, point.x, point.y, fontSize);
+            if (mode === Mode.default){
+                this.drawQueue.push(Object.assign({cmd: list.commands}, defaultConfig));
+            } else {
+                const commands = list.commands;
+                this.cmdToGroup(commands).forEach(it => {
+                    this.drawQueue.push(Object.assign({cmd: it}, defaultConfig));
+                });
+            }            
+        }
+        
+        // this.drawQueue.push({
+        //     cmd: list.commands,
+        //     point,
+        //     config,
+        //     index: 0,
+        //     stroke: config.stroke || this._default.stroke
+        // });
+    }
+
+    cmdToGroup(list) {
+        const result = [];
+        let tmp = [];
+        list.forEach(cmd => {
+            if (cmd.type === 'Z') {
+                tmp.push(cmd);
+                result.push(tmp);
+                tmp = [];
+            } else {
+                tmp.push(cmd);
+            }
         });
+        return result;
     }
 
     changeTTF(path) {
@@ -141,6 +186,7 @@ class LzPaintText {
         handler.startTimer();
     }
 
+    // 保存绘制之前canvas图像
     saveLastCanvasImage() {
         const offCanvas = document.createElement('canvas');
         const offCtx = offCanvas.getContext('2d');
@@ -154,11 +200,16 @@ class LzPaintText {
         this.dataURL = dataURL;
     }
 
+    // 恢复到未绘制之前图像
     restoreCanvasImage() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.putImageData(this.dataURL, 0, 0);
     }
 
+    /**
+     * 更新
+     * @param {Number} idx 
+     */
     update(idx) {
         this.restoreCanvasImage();
         this.drawQueue.forEach(it => {
@@ -174,9 +225,14 @@ class LzPaintText {
         })
     }
 
+    /**
+     * 绘制每一个路径
+     * @param {Object} item 
+     */
     drawAnimate(item) {
         const list = item.cmd;
         const idx = item.index;
+        const ctx = this.context;
 
         ctx.strokeStyle = item.stroke;
         ctx.beginPath();
@@ -200,10 +256,52 @@ class LzPaintText {
             var it = list[idx];
             
             if (it.type !== 'Z') {
-                ctx.beginPath();
-                ctx.strokeStyle = "red";
-                ctx.arc(it.x, it.y, 3, 0, 2 * Math.PI);
-                ctx.stroke();
+                const x = it.x;
+                const y = it.y;
+                if (item.config.animation === Animation.circle) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = "red";
+                    ctx.arc(it.x, it.y, 3, 0, 2 * Math.PI);
+                    ctx.stroke();
+                } else if (item.config.animation === Animation.paint) {
+                    const paintTopLine = 20;
+                    const paintBodyLine = 50;
+
+                    const topA = {
+                        x: x + paintTopLine * Math.cos(Math.PI / 3),
+                        y: y - paintTopLine * Math.sin(Math.PI / 3)
+                    };
+                    const TopB = {
+                        x: x + paintTopLine * Math.sin(Math.PI / 3),
+                        y: y - paintTopLine * Math.cos(Math.PI / 3)
+                    };
+                    const bodyA = {
+                        x: topA.x + paintBodyLine * Math.cos(Math.PI / 4),
+                        y: topA.y - paintBodyLine * Math.cos(Math.PI / 4)
+                    }
+                    const bodyB = {
+                        x: TopB.x + paintBodyLine * Math.cos(Math.PI / 4),
+                        y: TopB.y - paintBodyLine * Math.cos(Math.PI / 4)
+                    }
+                    ctx.strokeStyle = "red";
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(topA.x, topA.y);
+                    ctx.lineTo(TopB.x, TopB.y);
+                    ctx.closePath();
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(topA.x, topA.y);
+                    ctx.lineTo(TopB.x, TopB.y);
+                    ctx.lineTo(bodyB.x, bodyB.y);
+                    ctx.lineTo(bodyA.x, bodyA.y);
+                    ctx.closePath();
+                    ctx.stroke();
+                } else if (item.config.animation === Animation.arrow) {
+                    // 待实现
+                }
+                
             }
         }
     }     
@@ -218,10 +316,26 @@ painter.addText('绘画', {
     y: 150
 },
 {
-    stroke: 'green'
+    stroke: 'green',
+    mode: Mode.default,
+    animation: Animation.paint
 });
-painter.addText('Hello Word', {
+painter.addText('绘画', {
     x: 40, 
     y: 250
-})
+},
+{
+    stroke: 'green',
+    mode: Mode.defaultSplit,
+    animation: Animation.circle
+});
+painter.addText('绘画', {
+    x: 240, 
+    y: 250
+},
+{
+    stroke: 'green',
+    mode: Mode.single,
+    animation: Animation.circle
+});
 painter.render();
