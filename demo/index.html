@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <canvas width="800" height="600" id="canvas"></canvas>
+  <script src="../dist/main.js"></script>
+  <script>
+    
+const ctx = canvas.getContext('2d');
+const painter = new window.LzPaintText.PaintText(canvas, '/fonts/minicaiyun.TTF', { fps: 10, fontSize: 48 });
+// painter.addText('绘画', {
+//     x: 40, 
+//     y: 150
+// },
+// {
+//     stroke: 'green',
+//     mode: Mode.default,
+//     animation: Animation.paint
+// });
+
+// ，山月随人归。
+
+// 却顾所来径，苍苍横翠微。
+
+// 相携及田家，童稚开荆扉。
+
+// 绿竹入幽径，青萝拂行衣。
+
+// 欢言得所憩，美酒聊共挥。
+
+// 长歌吟松风，曲尽河星稀。
+
+// 我醉君复乐，陶然共忘机。
+painter.checkReady().then(() => {
+  painter.addText(`却`, {
+    x: 40, 
+    y: 50
+},
+{
+    stroke: 'green',
+    mode: 2,
+    animation: 1
+});
+painter.addText(`相携及田家，童稚开荆扉。`, {
+    x: 40, 
+    y: 150
+},
+{
+    stroke: 'green',
+    mode: 1,
+    animation: 1
+});
+painter.render();
+})
+  </script>
+</body>
+</html>
