@@ -1,5 +1,7 @@
 import opentype from 'opentype.js'
 import { Mode, Animation } from './constants'
+import { animates } from './plugin'
+import { PaintPlugin } from './plugin/type'
 import {Timer} from './timer'
 
 interface Point {
@@ -42,6 +44,10 @@ export class PaintText {
   offDataURL?: ImageData
 
   drawQueue = [] as PaintTextConfigDrawQueue[]
+  
+  animations = {} as {
+    [k: number]: PaintPlugin
+  }
 
   constructor(canvas: HTMLCanvasElement, ttfPath: string, config: Partial<PaintTextConfig>) {
       this.canvas = canvas;
@@ -184,7 +190,7 @@ export class PaintText {
   // 恢复到未绘制之前图像
   restoreCanvasImage() {
     if (this.offCanvas && this.offDataURL) { 
-      this.context.clearRect(0, 0, this.offCanvas.width, this.offCanvas.height);
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
       this.context.putImageData(this.offDataURL, 0, 0);
     }
   }
@@ -234,58 +240,15 @@ export class PaintText {
           }
       }
       ctx.stroke();
-      
+
       if (idx >= 0) {
-          var it = list[idx];
-          
-          if (it.type !== 'Z') {
-              const x = it.x;
-              const y = it.y;
-              if (item.animation === Animation.circle) {
-                  ctx.beginPath();
-                  ctx.strokeStyle = "red";
-                  ctx.arc(it.x, it.y, 3, 0, 2 * Math.PI);
-                  ctx.stroke();
-              } else if (item.animation === Animation.paint) {
-                  const paintTopLine = 20;
-                  const paintBodyLine = 50;
-
-                  const topA = {
-                      x: x + paintTopLine * Math.cos(Math.PI / 3),
-                      y: y - paintTopLine * Math.sin(Math.PI / 3)
-                  };
-                  const TopB = {
-                      x: x + paintTopLine * Math.sin(Math.PI / 3),
-                      y: y - paintTopLine * Math.cos(Math.PI / 3)
-                  };
-                  const bodyA = {
-                      x: topA.x + paintBodyLine * Math.cos(Math.PI / 4),
-                      y: topA.y - paintBodyLine * Math.cos(Math.PI / 4)
-                  }
-                  const bodyB = {
-                      x: TopB.x + paintBodyLine * Math.cos(Math.PI / 4),
-                      y: TopB.y - paintBodyLine * Math.cos(Math.PI / 4)
-                  }
-                  ctx.strokeStyle = "red";
-                  ctx.beginPath();
-                  ctx.moveTo(x, y);
-                  ctx.lineTo(topA.x, topA.y);
-                  ctx.lineTo(TopB.x, TopB.y);
-                  ctx.closePath();
-                  ctx.stroke();
-
-                  ctx.beginPath();
-                  ctx.moveTo(topA.x, topA.y);
-                  ctx.lineTo(TopB.x, TopB.y);
-                  ctx.lineTo(bodyB.x, bodyB.y);
-                  ctx.lineTo(bodyA.x, bodyA.y);
-                  ctx.closePath();
-                  ctx.stroke();
-              } else if (item.animation === Animation.arrow) {
-                  // 待实现
-              }
-              
+        const it = list[idx];
+        if (it.type !== 'Z') {
+          const func = animates[item.animation as number];
+          if (func) {
+            func(ctx, {x: it.x, y: it.y})
           }
+        }
       }
   }     
 }
