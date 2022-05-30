@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        .zong {
+            position: absolute;
+            transform-origin: top center;
+            animation-name: swing;
+            animation-duration: 2s;
+            animation-iteration-count: infinite;
+        }
+        .tr {
+            right: 10px;
+            top: 10px;
+        }
+        .tb {
+            right: 10px;
+            bottom: 10px;
+        }
+        @keyframes swing {
+            20% {
+                transform: rotate3d(0, 0, 1, 15deg);
+            }
+
+            40% {
+                transform: rotate3d(0, 0, 1, -10deg);
+            }
+
+            60% {
+                transform: rotate3d(0, 0, 1, 5deg);
+            }
+
+            80% {
+                transform: rotate3d(0, 0, 1, -5deg);
+            }
+
+            to {
+                transform: rotate3d(0, 0, 1, 0deg);
+            }
+            }
+            .change {
+                position: absolute;
+                right: -30px;
+                top: calc((100% - 66px) / 2);
+                writing-mode: vertical-lr;
+                cursor: pointer;
+                color: #fff;
+                background: #1890ff;
+                border-radius: 2px;
+                padding: 4px 2px;
+            }
+    </style>
+</head>
+<body>
+    <div style="margin: 0 auto;width: 800px;background: url(./bg.jpg);    background-size: cover;position: relative;">
+        <canvas id="canvas" width="800" height="800"></canvas>
+        <img src="//www.lzuntalented.cn/img/paint/zong.png" alt="" width="40" class="zong swing tr">
+        <img src="//www.lzuntalented.cn/img/paint/zong.png" alt="" width="40" class="zong swing tb">
+        <div class="change" id="button">换一首</div>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
