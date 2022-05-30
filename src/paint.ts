@@ -49,6 +49,8 @@ export class PaintText {
     [k: number]: PaintPlugin
   }
 
+  renderHandler: Timer | undefined
+
   constructor(canvas: HTMLCanvasElement, ttfPath: string, config: Partial<PaintTextConfig>) {
       this.canvas = canvas;
       this.context = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -83,32 +85,6 @@ export class PaintText {
       })).startTimer();
     })
   }
-
-  // draw(text, point, config) {
-  //     if (!this.font) {
-  //         const time = new LzTimer(this._default.fps, () => {
-  //             if (this.font) {
-  //                 this.draw(text, point, config);
-  //                 return false;
-  //             }
-  //         });
-  //         time.startTimer();
-  //         return ;
-  //     }
-
-  //     const list = this.font.getPath(text, point.x, point.y, this._default.fontSize);
-      
-  //     const index = this.drawHandlers.length;
-  //     // const handler = new LzTimer(this._default.fps, this.update.bind(this, index));
-  //     this.drawHandlers.push({
-  //         timer: handler,
-  //         drawCmd: list.commands,
-  //         drawIndex: 0,
-  //         point,
-  //         config
-  //     });
-  //     handler.startTimer();
-  // }
 
   addText(text: string, point: Point, config: Partial<PaintTextConfig>) {
       if (!this.font) {
@@ -164,6 +140,7 @@ export class PaintText {
 
     this.saveLastCanvasImage();
     const handler = new Timer(this.config.fps, this.update.bind(this));
+    this.renderHandler = handler;
     handler.startTimer();
   }
 
@@ -250,5 +227,13 @@ export class PaintText {
           }
         }
       }
-  }     
+  }  
+
+  destory() {
+    this.renderHandler?.destroy();
+    this.drawQueue = [];
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.offContext?.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.offDataURL = undefined;
+  }  
 }

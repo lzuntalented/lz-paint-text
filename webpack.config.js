@@ -1,5 +1,10 @@
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const isProd = process.env.NODE_ENV === 'production'
 module.exports = {
-  entry: './src/entry.ts',
+  entry: {
+    main: isProd ? './src/index.ts' : './demo/entry.ts',
+    demo: './demo/entry.ts',
+  },
   output: {
     library: 'LzPaintText'
   },
@@ -15,7 +20,18 @@ module.exports = {
     // Add `.ts` and `.tsx` as a resolvable extension.
     extensions: [".ts", ".tsx", ".js"]
   },
-  mode: 'development',
+  plugins: [
+    new HtmlWebpackPlugin({ // Also generate a test.html
+      chunks: [],
+      filename: 'index.html',
+      template: './public/index.html',
+      templateParameters: {
+        jsPath: `demo`,
+        urlPath: isProd ? '//www.lzuntalented.cn/img/paint/' : './'
+      },
+    }),
+  ],
+  mode: process.NODE_ENV,
   devServer: {
     port: 9000,
   },
